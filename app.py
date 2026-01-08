@@ -72,6 +72,23 @@ def query_notion(query: str) -> str:
     # PDF 분석 결과 [cite: 801, 1057]에 따라 'API-post-search'와 'query' 인자 사용
     return asyncio.run(_mcp_tool_call("API-post-search", {"query": query}))
 
+# [Tool 2] 내용 읽기 기능
+def get_page_content(page_id: str) -> str:
+    """
+    특정 Page ID에 해당하는 문서의 실제 내용을 읽어옵니다.
+    검색 결과에서 찾은 ID를 이 도구에 입력하세요.
+    """
+    # API-get-block-children 도구는 block_id(여기선 page_id)를 받아 하위 블록(텍스트)을 줍니다.
+    result = asyncio.run(_mcp_tool_call("API-get-block-children", {"block_id": page_id}))
+    
+    if hasattr(result, 'content') and result.content:
+        text_content = []
+        for c in result.content:
+            if hasattr(c, 'text'):
+                text_content.append(c.text)
+        return "\n".join(text_content)
+    return "내용을 읽을 수 없습니다."
+
 # --- 4. Gemini 클라이언트 설정 ---
 client = genai.Client(api_key=GEMINI_API_KEY)
 
