@@ -63,47 +63,14 @@ async def _mcp_tool_call(tool_name: str, arguments: dict):
     except Exception as e:
         return f"⚠️ 에러 발생 ({tool_name}): {str(e)}"
 
-# [Tool 1] 검색 기능 (강화됨: 날짜와 ID 정보 포함)
+# [Tool 1] 검색 기능 (이름 수정됨: API-post-search)
 def query_notion(query: str) -> str:
     """
-    Notion에서 문서를 검색합니다. 제목, 수정일, Page ID를 반환합니다.
+    Notion 워크스페이스에서 키워드로 문서를 검색합니다.
+    문서의 제목이나 내용을 찾을 때 사용합니다.
     """
-    result = asyncio.run(_mcp_tool_call("API-post-search", {"query": query}))
-    
-    # MCP 결과에서 유용한 정보만 정제해서 LLM에게 줍니다.
-    if hasattr(result, 'content') and result.content:
-        parsed_results = []
-        try:
-            # MCP 서버가 보통 JSON 문자열을 줍니다. 파싱 시도.
-            # 텍스트 형태의 리스트라면 그대로 처리
-            for item in result.content:
-                if hasattr(item, 'text'):
-                    # 원본 JSON 데이터가 너무 길어서 LLM이 헷갈려하니 요약해줍니다.
-                    # 실제로는 여기서 JSON 파싱을 해서 예쁘게 주는게 좋지만, 
-                    # Notion MCP의 응답 형태가 복잡하므로 텍스트 전체를 넘깁니다.
-                    # 다만, Gemini가 잘 이해하도록 프롬프트로 제어합니다.
-                    return item.text 
-        except:
-            pass
-        return str(result.content)
-    return "검색 결과가 없습니다."
-
-# [Tool 2] 내용 읽기 기능 (새로 추가됨!)
-def get_page_content(page_id: str) -> str:
-    """
-    특정 Page ID에 해당하는 문서의 실제 내용을 읽어옵니다.
-    검색 결과에서 찾은 ID를 이 도구에 입력하세요.
-    """
-    # API-get-block-children 도구는 block_id(여기선 page_id)를 받아 하위 블록(텍스트)을 줍니다.
-    result = asyncio.run(_mcp_tool_call("API-get-block-children", {"block_id": page_id}))
-    
-    if hasattr(result, 'content') and result.content:
-        text_content = []
-        for c in result.content:
-            if hasattr(c, 'text'):
-                text_content.append(c.text)
-        return "\n".join(text_content)
-    return "내용을 읽을 수 없습니다."
+    # PDF 분석 결과 [cite: 801, 1057]에 따라 'API-post-search'와 'query' 인자 사용
+    return asyncio.run(_mcp_tool_call("API-post-search", {"query": query}))
 
 # --- 4. Gemini 클라이언트 설정 ---
 client = genai.Client(api_key=GEMINI_API_KEY)
