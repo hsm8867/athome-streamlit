@@ -1,0 +1,11 @@
+# 1. Node.js가 이미 포함된 이미지를 베이스로 사용합니다.
+FROM node:20-slim
+
+# 2. 작업 디렉토리 설정
+WORKDIR /app
+
+# 3. 필요한 MCP 서버 패키지를 글로벌로 설치합니다.
+#RUN npm install -g @modelcontextprotocol/notion
+
+# 4. npx를 사용하여 서버를 실행합니다.
+ENTRYPOINT ["npx", "@modelcontextprotocol/server-notion"]
